@@ -1,52 +1,46 @@
 """
-Thread_name_and_processes.py - Chapter 2: Naming threads
+Thread_determine.py - Chapter 2: Determining which thread/process is running
 
-Shows how to give each thread a name (name=...) and how a running thread
-can find out its own name. Named threads make output and logs much easier
-to read than the default names (Thread-1, Thread-2, ...).
+Shows how a thread can report its own name and the ID of the process it
+belongs to. All threads of one program share the same process ID, but each
+thread has its own thread ID.
 """
 
-import threading
-import time
+# CHANGED: removed the unused imports 'time' and 'randint' (the latter was
+# imported inside main() but never used)
+from threading import Thread, get_ident
+import os
 
 
-# CHANGED: the three functions were exactly the same, so they now share one
-# helper. Each thread still runs its own function, as in the original.
-def work():
-    # CHANGED: threading.current_thread().name replaces
-    # threading.currentThread().getName(). The old camelCase names are
-    # deprecated since Python 3.10. Also uses an f-string instead of str().
-    name = threading.current_thread().name
-    print(f'{name} --> starting \n')
-    time.sleep(2)  # simulate work
-    print(f'{name} --> exiting \n')
+class MyThreadClass(Thread):
+    def __init__(self, name):
+        Thread.__init__(self)
+        self.name = name
+
+    def run(self):
+        # CHANGED: the original print had the process ID part commented out
+        # (#, " is {} \n".format(os.getpid())), so the process ID was never
+        # shown. It is now printed, plus the thread ID to show the difference.
+        print(f"ID of process running {self.name}: {os.getpid()} "
+              f"(thread ID: {get_ident()})")
 
 
-def function_A():
-    work()
+def main():
+    # Thread Creation
+    thread1 = MyThreadClass("Thread#1 ")
+    thread2 = MyThreadClass("Thread#2 ")
 
+    # Thread Running
+    thread1.start()
+    thread2.start()
 
-def function_B():
-    work()
+    # Thread joining: wait for both threads to finish
+    thread1.join()
+    thread2.join()
 
-
-def function_C():
-    work()
+    # End
+    print("End")
 
 
 if __name__ == "__main__":
-
-    # Each thread gets an explicit name through the name= argument
-    t1 = threading.Thread(name='function_A', target=function_A)
-    t2 = threading.Thread(name='function_B', target=function_B)
-    t3 = threading.Thread(name='function_C', target=function_C)
-
-    # Start all three threads (they run at the same time)
-    t1.start()
-    t2.start()
-    t3.start()
-
-    # Wait for all three to finish
-    t1.join()
-    t2.join()
-    t3.join()
+    main()
